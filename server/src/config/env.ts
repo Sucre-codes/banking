@@ -24,5 +24,4 @@ export const env = {
   RESEND_SENDER_EMAIL: required('RESEND_SENDER_EMAIL'),
   RESEND_SENDER_NAME: required('RESEND_SENDER_NAME'),
   CLIENT_ORIGIN: required('CLIENT_ORIGIN'),
-  APP_URL: required('APP_URL')
 };
