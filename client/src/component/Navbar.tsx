@@ -1,20 +1,10 @@
-import { useState } from 'react';
-import { NavLink, Link } from 'react-router-dom';
-import { useAuth } from '../hooks/useAuth';
+
+import {  Link } from 'react-router-dom';
+
 import Logo from '../assets/Bank-of-America-Logo.png'
 
 const Navbar = () => {
-  const { logout } = useAuth();
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-
-  const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
-
-  const navLinkClass = ({ isActive }: { isActive: boolean }) =>
-    `transition ${
-      isActive
-        ? 'text-boared-500 font-semibold'
-        : 'text-slate-700 hover:text-boared-600'
-    }`;
+  
 
   return (
     <nav className="sticky top-0 z-50 bg-white shadow-sm">
