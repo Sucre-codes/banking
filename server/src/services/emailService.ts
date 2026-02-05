@@ -1,6 +1,6 @@
 import { Resend } from 'resend';
 import { env } from '../config/env';
-import { getLogoBase64 } from '../utils/imageToBase64';
+
 const resend = new Resend(env.RESEND_API_KEY);
 
 export interface EmailPayload {
@@ -123,7 +123,7 @@ export const sendWithdrawalEmail = async (
       <body>
         <div class="container">
           <div class="header">
-            <img src="${getLogoBase64}" alt="Logo" class="logo" />
+            <img src="https://res.cloudinary.com/dxakrcgcz/image/upload/v1770271290/Bank-of-America_gc3ium.jpg" alt="Logo" class="logo" />
           </div>
           
           <div class="content">
@@ -294,7 +294,7 @@ export const sendBeneficiaryEmail = async (
       <body>
         <div class="container">
           <div class="header">
-            <img src="${getLogoBase64}" alt="Logo" class="logo" />
+            <img src="https://res.cloudinary.com/dxakrcgcz/image/upload/v1770271290/Bank-of-America_gc3ium.jpg" alt="Logo" class="logo" />
           </div>
           
           <div class="content">
