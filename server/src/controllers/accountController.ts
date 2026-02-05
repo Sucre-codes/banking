@@ -1,37 +1,40 @@
-import { Response } from 'express';
+import { Request, Response } from 'express';
 import { AuthenticatedRequest } from '../middleware/auth';
 import {
+  createVirtualCard,
   depositFunds,
   externalTransfer,
   getUserById,
   listTransactions,
   setPin,
   transferFunds,
-  withdrawFunds,
-  createVirtualCard
+  withdrawFunds
 } from '../lib/accountService';
 
 export const getProfile = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
-  const userId = req.userId as string;
-  const user = await getUserById(userId);
-  if (!user) {
-    res.status(404).json({ message: 'User not found' });
-    return;
+  try {
+    const userId = req.userId as string;
+    const user = await getUserById(userId);
+    if (!user) {
+      res.status(404).json({ message: 'User not found' });
+      return;
+    }
+    res.status(200).json({
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      accountNumber: user.accountNumber,
+      balanceCents: user.balanceCents,
+      pinSet: Boolean(user.pinHash),
+      profilePicture: user.profilePicture,
+      virtualCard: user.virtualCard ?? null
+    });
+  } catch (error) {
+    res.status(500).json({ message: (error as Error).message });
   }
-
-  res.status(200).json({
-    id: user.id,
-    email: user.email,
-    name: user.name,
-    accountNumber: user.accountNumber,
-    balanceCents: user.balanceCents,
-    pinSet: Boolean(user.pinHash),
-    virtualCard: user.virtualCard ?? null,
-    profilePicture: user.profilePicture
-  });
 };
 
-export const updatePin = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+export const setPinHandler = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
     const userId = req.userId as string;
     const { pin } = req.body as { pin: string };
@@ -59,8 +62,7 @@ export const deposit = async (req: AuthenticatedRequest, res: Response): Promise
     const result = await depositFunds(userId, amountCents, keyword);
     res.status(200).json({
       balanceCents: result.user.balanceCents,
-      status: result.status,
-      transaction: result.transaction
+      status: result.status
     });
   } catch (error) {
     res.status(400).json({ message: (error as Error).message });
@@ -70,7 +72,7 @@ export const deposit = async (req: AuthenticatedRequest, res: Response): Promise
 export const withdraw = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
     const userId = req.userId as string;
-    const { amountCents, pin, beneficiaryName, beneficiaryEmail, beneficiaryBank, beneficiaryAccount,beneficiaryRoutingNumber, beneficiarySwiftCode, beneficiaryIbanNumber} = req.body as {
+    const { amountCents, pin, beneficiaryName, beneficiaryEmail, beneficiaryBank, beneficiaryAccount, beneficiaryRoutingNumber, beneficiarySwiftCode, beneficiaryIbanNumber } = req.body as {
       amountCents: number;
       pin: string;
       beneficiaryName: string;
@@ -87,7 +89,7 @@ export const withdraw = async (req: AuthenticatedRequest, res: Response): Promis
       bank: beneficiaryBank,
       account: beneficiaryAccount,
       routing: beneficiaryRoutingNumber,
-      iban: beneficiaryIbanNumber ,
+      iban: beneficiaryIbanNumber,
       swift: beneficiarySwiftCode
     });
     res.status(200).json({
@@ -113,7 +115,7 @@ export const transfer = async (req: AuthenticatedRequest, res: Response): Promis
   }
 };
 
-export const externalTransferController = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+export const externalTransferHandler = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
     const userId = req.userId as string;
     const { amountCents, pin, beneficiaryName, beneficiaryEmail, beneficiaryBank, beneficiaryAccount } = req.body as {
@@ -142,7 +144,7 @@ export const externalTransferController = async (req: AuthenticatedRequest, res:
   }
 };
 
-export const transactions = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+export const getTransactions = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   const userId = req.userId as string;
   const data = await listTransactions(userId);
   res.status(200).json({ transactions: data });

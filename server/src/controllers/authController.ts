@@ -16,7 +16,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
         accountNumber: user.accountNumber,
         balanceCents: user.balanceCents,
         pinSet: Boolean(user.pinHash),
-        profilePicture: user.profilePicture, // Add this
+        profilePicture: user.profilePicture,
         virtualCard: user.virtualCard ?? null
       }
     });
@@ -39,7 +39,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
         accountNumber: user.accountNumber,
         balanceCents: user.balanceCents,
         pinSet: Boolean(user.pinHash),
-        profilePicture: user.profilePicture, // Add this
+        profilePicture: user.profilePicture,
         virtualCard: user.virtualCard ?? null
       }
     });
@@ -47,4 +47,3 @@ export const login = async (req: Request, res: Response): Promise<void> => {
     res.status(401).json({ message: (error as Error).message });
   }
 };
-

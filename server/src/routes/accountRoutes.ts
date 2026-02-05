@@ -2,14 +2,14 @@ import { Router } from 'express';
 import {
   deposit,
   getProfile,
-  transactions,
+  getTransactions,
   transfer,
   withdraw,
-  updatePin,
-  externalTransferController,
+  setPinHandler,
+  externalTransferHandler,
   createCard
 } from '../controllers/accountController';
-import { requireAuth } from '../middleware/auth';
+import { authenticate } from '../middleware/auth';
 import { validateBody } from '../middleware/validate';
 import {
   depositSchema,
@@ -21,15 +21,15 @@ import {
 
 const router = Router();
 
-router.use(requireAuth);
+router.use(authenticate);
 
 router.get('/me', getProfile);
-router.post('/pin', validateBody(pinSchema), updatePin);
+router.post('/pin', validateBody(pinSchema), setPinHandler);
 router.post('/virtual-card', createCard);
 router.post('/deposit', validateBody(depositSchema), deposit);
 router.post('/withdraw', validateBody(withdrawSchema), withdraw);
 router.post('/transfer', validateBody(transferSchema), transfer);
-router.post('/external-transfer', validateBody(externalTransferSchema), externalTransferController);
-router.get('/transactions', transactions);
+router.post('/external-transfer', validateBody(externalTransferSchema), externalTransferHandler);
+router.get('/transactions', getTransactions);
 
 export default router;

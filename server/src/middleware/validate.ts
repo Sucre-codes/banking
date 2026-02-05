@@ -1,19 +1,15 @@
 import { Request, Response, NextFunction } from 'express';
 
-export interface ValidationResult<T> {
-  value?: T;
-  errors?: Record<string, string>;
-}
+export type ValidationResult<T> = { value: T; errors?: never } | { errors: Record<string, string>; value?: never };
 
-export type Validator<T> = (body: unknown) => ValidationResult<T>;
-
-export const validateBody = <T>(validator: Validator<T>) =>
+export const validateBody = <T>(schema: (body: unknown) => ValidationResult<T>) =>
   (req: Request, res: Response, next: NextFunction): void => {
-    const result = validator(req.body);
+    const result = schema(req.body);
     if (result.errors) {
       res.status(400).json({ message: 'Validation error', errors: result.errors });
       return;
     }
-    req.body = result.value;
+    // Create a new object with validated data
+    (req as any).body = result.value;
     next();
   };
