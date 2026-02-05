@@ -5,7 +5,8 @@
   "main": "dist/index.js",
   "private": "true",
   "engines": {
-    "node": "20.x"
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
   },
   "scripts": {
     "dev": "nodemon src/index.ts",
