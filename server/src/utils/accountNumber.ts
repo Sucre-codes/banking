@@ -1,4 +1,4 @@
 export const generateAccountNumber = (): string => {
-  const randomPart = Math.floor(100000 + Math.random() * 900000);
-  return `ACCT-${randomPart}`;
+  // Generate exactly 10 digits
+  return Math.floor(1000000000 + Math.random() * 9000000000).toString();
 };

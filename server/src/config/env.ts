@@ -20,8 +20,9 @@ export const env = {
   PORT: Number(process.env.PORT ?? '4000'),
   MONGO_URI: required('MONGO_URI'),
   JWT_SECRET: required('JWT_SECRET'),
-  BREVO_API_KEY: required('BREVO_API_KEY'),
-  BREVO_SENDER_EMAIL: required('BREVO_SENDER_EMAIL'),
-  BREVO_SENDER_NAME: required('BREVO_SENDER_NAME'),
-  CLIENT_ORIGIN: required('CLIENT_ORIGIN')
+  RESEND_API_KEY: required('RESEND_API_KEY'),
+  RESEND_SENDER_EMAIL: required('RESEND_SENDER_EMAIL'),
+  RESEND_SENDER_NAME: required('RESEND_SENDER_NAME'),
+  CLIENT_ORIGIN: required('CLIENT_ORIGIN'),
+  APP_URL: required('APP_URL')
 };

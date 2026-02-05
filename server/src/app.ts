@@ -6,6 +6,7 @@ import { env } from './config/env';
 
 const app = express();
 
+app.use(express.static('public'));
 app.use(cors({ origin: env.CLIENT_ORIGIN }));
 app.use(express.json());
 

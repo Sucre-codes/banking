@@ -14,7 +14,10 @@ export const register = async (req: Request, res: Response): Promise<void> => {
         email: user.email,
         name: user.name,
         accountNumber: user.accountNumber,
-        balanceCents: user.balanceCents
+        balanceCents: user.balanceCents,
+        pinSet: Boolean(user.pinHash),
+        profilePicture: user.profilePicture, // Add this
+        virtualCard: user.virtualCard ?? null
       }
     });
   } catch (error) {
@@ -24,8 +27,8 @@ export const register = async (req: Request, res: Response): Promise<void> => {
 
 export const login = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { email, password } = req.body as { email: string; password: string };
-    const user = await authenticateUser(email, password);
+    const { identifier, password } = req.body as { identifier: string; password: string };
+    const user = await authenticateUser(identifier, password);
     const token = signToken({ userId: user.id });
     res.status(200).json({
       token,
@@ -34,10 +37,14 @@ export const login = async (req: Request, res: Response): Promise<void> => {
         email: user.email,
         name: user.name,
         accountNumber: user.accountNumber,
-        balanceCents: user.balanceCents
+        balanceCents: user.balanceCents,
+        pinSet: Boolean(user.pinHash),
+        profilePicture: user.profilePicture, // Add this
+        virtualCard: user.virtualCard ?? null
       }
     });
   } catch (error) {
     res.status(401).json({ message: (error as Error).message });
   }
 };
+
