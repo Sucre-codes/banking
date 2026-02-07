@@ -3,8 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { transfer, externalTransfer } from '../lib/api';
 import { useAuth } from '../hooks/useAuth';
 
-const formatCents = (value: number) => {
-  return (value / 100).toLocaleString('en-US', { style: 'currency', currency: 'USD' });
+const formatCents = (value: number, isEuro = false) => {
+  const currency = isEuro ? 'EUR' : 'USD';
+  return (value / 100).toLocaleString('en-US', { style: 'currency', currency });
 };
 
 type TransferType = 'internal' | 'external';
@@ -34,6 +35,39 @@ const TransferPage = () => {
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Determine if using Euro based on IBAN/SWIFT or USD based on routing
+  const isEuroTransfer = transferType === 'external' && (beneficiary.iban || beneficiary.swift) && !beneficiary.routing;
+  const currencySymbol = isEuroTransfer ? '€' : '$';
+  const currency = isEuroTransfer ? 'EUR' : 'USD';
+
+  // Handle routing number change - clear IBAN and SWIFT when routing is entered
+  const handleRoutingChange = (value: string) => {
+    setBeneficiary({ 
+      ...beneficiary, 
+      routing: value,
+      iban: '',
+      swift: ''
+    });
+  };
+
+  // Handle IBAN change - clear routing when IBAN is entered
+  const handleIbanChange = (value: string) => {
+    setBeneficiary({ 
+      ...beneficiary, 
+      iban: value,
+      routing: beneficiary.routing && value ? '' : beneficiary.routing
+    });
+  };
+
+  // Handle SWIFT change - clear routing when SWIFT is entered
+  const handleSwiftChange = (value: string) => {
+    setBeneficiary({ 
+      ...beneficiary, 
+      swift: value,
+      routing: beneficiary.routing && value ? '' : beneficiary.routing
+    });
+  };
+
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
     if (!token || !user) return;
@@ -60,9 +94,9 @@ const TransferPage = () => {
           beneficiaryEmail: beneficiary.email,
           beneficiaryBank: beneficiary.bank,
           beneficiaryAccount: beneficiary.account,
-          beneficiaryIbanNumber:beneficiary.iban,
-        beneficiaryRoutingNumber:beneficiary.routing,
-        beneficiarySwiftCode:beneficiary.swift
+          beneficiaryIbanNumber: beneficiary.iban || undefined,
+          beneficiaryRoutingNumber: beneficiary.routing || undefined,
+          beneficiarySwiftCode: beneficiary.swift || undefined
         });
       }
 
@@ -98,8 +132,8 @@ const TransferPage = () => {
   }
 
   const insufficientFunds = !!(
-  Number(amount) > 0 && user.balanceCents < Math.round(Number(amount) * 100)
-);
+    Number(amount) > 0 && user.balanceCents < Math.round(Number(amount) * 100)
+  );
 
   return (
     <div className="mx-auto max-w-4xl">
@@ -131,6 +165,23 @@ const TransferPage = () => {
               >
                 Go to Settings →
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Currency Info for External Transfers */}
+      {transferType === 'external' && (beneficiary.routing || beneficiary.iban || beneficiary.swift) && (
+        <div className="mb-6 rounded-xl border-l-4 border-blue-500 bg-blue-50 p-4">
+          <div className="flex items-start gap-3">
+            <span className="text-2xl">💱</span>
+            <div>
+              <p className="font-semibold text-blue-900">Currency: {currency}</p>
+              <p className="mt-1 text-sm text-blue-700">
+                {isEuroTransfer 
+                  ? 'Transfer will be processed in Euros (EUR) based on IBAN/SWIFT'
+                  : 'Transfer will be processed in US Dollars (USD) based on routing number'}
+              </p>
             </div>
           </div>
         </div>
@@ -233,10 +284,10 @@ const TransferPage = () => {
             {/* Amount and PIN */}
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
-                <label className="label">Amount (USD)</label>
+                <label className="label">Amount ({transferType === 'external' ? currency : 'USD'})</label>
                 <div className="relative mt-2">
                   <span className="absolute left-4 top-1/2 -translate-y-1/2 text-lg font-semibold text-slate-400">
-                    $
+                    {transferType === 'external' ? currencySymbol : '$'}
                   </span>
                   <input
                     type="number"
@@ -342,46 +393,65 @@ const TransferPage = () => {
                     </div>
                   </div>
 
-                  {/* Optional fields */}
-                  <details className="group">
-                    <summary className="cursor-pointer text-sm font-medium text-slate-700 hover:text-slate-900">
-                      + Additional Details (Optional)
-                    </summary>
-                    <div className="mt-4 grid gap-4 sm:grid-cols-3">
+                  {/* Optional fields with mutual exclusivity */}
+                  <div>
+                    <h4 className="mb-2 text-sm font-medium text-slate-700">Bank Transfer Details</h4>
+                    <div className="grid gap-4 sm:grid-cols-3">
                       <div>
-                        <label className="label">Routing Number</label>
+                        <label className="label">
+                          Routing Number (USD)
+                          {beneficiary.routing && <span className="ml-1 text-green-600">✓</span>}
+                        </label>
                         <input
                           type="text"
                           value={beneficiary.routing}
-                          onChange={(e) => setBeneficiary({ ...beneficiary, routing: e.target.value })}
+                          onChange={(e) => handleRoutingChange(e.target.value)}
                           className="input mt-2"
-                          disabled={loading || !user.pinSet}
+                          disabled={loading || !user.pinSet || !!(beneficiary.iban || beneficiary.swift)}
+                          placeholder={beneficiary.iban || beneficiary.swift ? 'Disabled (EUR)' : ''}
                         />
+                        {beneficiary.routing && (
+                          <p className="mt-1 text-xs text-green-600">USD transfer</p>
+                        )}
                       </div>
 
                       <div>
-                        <label className="label">SWIFT Code</label>
+                        <label className="label">
+                          SWIFT Code (EUR)
+                          {beneficiary.swift && <span className="ml-1 text-blue-600">✓</span>}
+                        </label>
                         <input
                           type="text"
                           value={beneficiary.swift}
-                          onChange={(e) => setBeneficiary({ ...beneficiary, swift: e.target.value })}
+                          onChange={(e) => handleSwiftChange(e.target.value)}
                           className="input mt-2"
-                          disabled={loading || !user.pinSet}
+                          disabled={loading || !user.pinSet || !!beneficiary.routing}
+                          placeholder={beneficiary.routing ? 'Disabled (USD)' : ''}
                         />
+                        {beneficiary.swift && !beneficiary.routing && (
+                          <p className="mt-1 text-xs text-blue-600">EUR transfer</p>
+                        )}
                       </div>
 
                       <div>
-                        <label className="label">IBAN</label>
+                        <label className="label">
+                          IBAN (EUR)
+                          {beneficiary.iban && <span className="ml-1 text-blue-600">✓</span>}
+                        </label>
                         <input
                           type="text"
                           value={beneficiary.iban}
-                          onChange={(e) => setBeneficiary({ ...beneficiary, iban: e.target.value })}
+                          onChange={(e) => handleIbanChange(e.target.value)}
                           className="input mt-2"
-                          disabled={loading || !user.pinSet}
+                          disabled={loading || !user.pinSet || !!beneficiary.routing}
+                          placeholder={beneficiary.routing ? 'Disabled (USD)' : ''}
                         />
+                        {beneficiary.iban && !beneficiary.routing && (
+                          <p className="mt-1 text-xs text-blue-600">EUR transfer</p>
+                        )}
                       </div>
                     </div>
-                  </details>
+                  </div>
                 </div>
               </div>
             )}
@@ -433,6 +503,24 @@ const TransferPage = () => {
               )}
             </div>
           </div>
+
+          {/* Currency Info for External */}
+          {transferType === 'external' && (
+            <div className="card">
+              <div className="flex items-start gap-3">
+                <span className="text-xl">ℹ️</span>
+                <div>
+                  <p className="text-sm font-semibold text-slate-900">Currency Selection</p>
+                  <p className="mt-1 text-xs text-slate-600">
+                    • Routing Number → USD
+                  </p>
+                  <p className="mt-1 text-xs text-slate-600">
+                    • IBAN/SWIFT → EUR
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Security */}
           <div className="card">

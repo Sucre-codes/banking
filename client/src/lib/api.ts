@@ -1,6 +1,6 @@
 import type{ AuthUser, Transaction, VirtualCard } from '../types';
 
-const API_URL = import.meta.env.VITE_API_URL as string;
+const API_URL = 'import.meta.env.VITE_API_URL as string';
 
 interface AuthResponse {
   token: string;
